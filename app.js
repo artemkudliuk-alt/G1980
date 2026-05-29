@@ -3,46 +3,161 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-
-    if (isMobile) {
-        // --- MOBILE NATIVE ENGINE ---
-        initializeMobileEngine();
-    } else {
-        // --- DESKTOP KINETIC ENGINE ---
-        initializeDesktopEngine();
+    const mq = window.matchMedia("(max-width: 768px)");
+    
+    let activeEngine = null; // 'desktop' or 'mobile'
+    
+    // Desktop engine state and references
+    let desktopScrollHandler = null;
+    let desktopResizeHandler = null;
+    let desktopMouseMoveHandler = null;
+    let desktopMouseLeaveHandler = null;
+    let desktopHoverHandlers = [];
+    let physicsRafId = null;
+    let idleTimeout = null;
+    let hoverResetTimeout = null;
+    
+    // Mobile engine state and references
+    let mobileObserver = null;
+    let mobileResizeHandler = null;
+    let mobileOrientationHandler = null;
+    
+    // Shared elements
+    const timelineSections = document.querySelectorAll('.timeline-section');
+    const mediaAssets = document.querySelectorAll('.media-asset');
+    
+    function handleViewportChange(e) {
+        if (e.matches) {
+            // Screen is mobile
+            if (activeEngine === 'desktop') {
+                destroyDesktopEngine();
+            }
+            if (activeEngine !== 'mobile') {
+                initializeMobileEngine();
+            }
+        } else {
+            // Screen is desktop
+            if (activeEngine === 'mobile') {
+                destroyMobileEngine();
+            }
+            if (activeEngine !== 'desktop') {
+                initializeDesktopEngine();
+            }
+        }
     }
-
-    function initializeMobileEngine() {
-        const timelineSections = document.querySelectorAll('.timeline-section');
-        const mediaAssets = document.querySelectorAll('.media-asset');
-
-        // Preload and activate first step immediately on load to prevent blank layout
-        activateMobileStep(0);
-
-        // IntersectionObserver using standard rootMargin centered line
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const idx = parseInt(entry.target.getAttribute('data-index'));
-                    if (!isNaN(idx)) {
-                        activateMobileStep(idx);
-                    }
-                }
-            });
-        }, {
-            root: null,
-            rootMargin: "-50% 0px -50% 0px", // Center trigger
-            threshold: 0
+    
+    // Register Media Query change listener
+    mq.addEventListener('change', handleViewportChange);
+    
+    // Initial runtime bootstrap
+    handleViewportChange(mq);
+    
+    function destroyDesktopEngine() {
+        activeEngine = null;
+        
+        if (desktopScrollHandler) {
+            window.removeEventListener('scroll', desktopScrollHandler);
+            desktopScrollHandler = null;
+        }
+        if (desktopResizeHandler) {
+            window.removeEventListener('resize', desktopResizeHandler);
+            desktopResizeHandler = null;
+        }
+        if (desktopMouseMoveHandler) {
+            window.removeEventListener('mousemove', desktopMouseMoveHandler);
+            desktopMouseMoveHandler = null;
+        }
+        if (desktopMouseLeaveHandler) {
+            document.removeEventListener('mouseleave', desktopMouseLeaveHandler);
+            desktopMouseLeaveHandler = null;
+        }
+        
+        desktopHoverHandlers.forEach(({ element, type, handler }) => {
+            element.removeEventListener(type, handler);
         });
-
-        // Observe each narrative section
+        desktopHoverHandlers = [];
+        
+        if (physicsRafId) {
+            cancelAnimationFrame(physicsRafId);
+            physicsRafId = null;
+        }
+        
+        clearTimeout(idleTimeout);
+        clearTimeout(hoverResetTimeout);
+        
         timelineSections.forEach(section => {
-            observer.observe(section);
+            section.classList.remove('active');
         });
-
+        
+        const timelineFill = document.getElementById('timeline-fill');
+        if (timelineFill) {
+            timelineFill.style.height = '0px';
+        }
+    }
+    
+    function destroyMobileEngine() {
+        activeEngine = null;
+        
+        if (mobileObserver) {
+            mobileObserver.disconnect();
+            mobileObserver = null;
+        }
+        
+        if (mobileResizeHandler) {
+            window.removeEventListener('resize', mobileResizeHandler);
+            mobileResizeHandler = null;
+        }
+        if (mobileOrientationHandler) {
+            window.removeEventListener('orientationchange', mobileOrientationHandler);
+            mobileOrientationHandler = null;
+        }
+        
+        timelineSections.forEach(section => {
+            section.classList.remove('is-active');
+        });
+    }
+    
+    function initializeMobileEngine() {
+        activeEngine = 'mobile';
+        
+        // Pre-activate first step immediately to prevent empty layout
+        activateMobileStep(0);
+        
+        function rebuildObserver() {
+            if (mobileObserver) {
+                mobileObserver.disconnect();
+            }
+            
+            // rootMargin: -49.5% to create a robust 1% center viewport intersection band
+            mobileObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const idx = parseInt(entry.target.getAttribute('data-index'));
+                        if (!isNaN(idx)) {
+                            activateMobileStep(idx);
+                        }
+                    }
+                });
+            }, {
+                root: null,
+                rootMargin: "-49.5% 0px -49.5% 0px",
+                threshold: 0
+            });
+            
+            timelineSections.forEach(section => {
+                mobileObserver.observe(section);
+            });
+        }
+        
+        rebuildObserver();
+        
+        mobileResizeHandler = rebuildObserver;
+        mobileOrientationHandler = rebuildObserver;
+        
+        window.addEventListener('resize', mobileResizeHandler);
+        window.addEventListener('orientationchange', mobileOrientationHandler);
+        
         function activateMobileStep(activeIndex) {
-            // 1. Remove .is-active from all sections, and add to current active index
             timelineSections.forEach((section, idx) => {
                 if (idx === activeIndex) {
                     section.classList.add('is-active');
@@ -50,13 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     section.classList.remove('is-active');
                 }
             });
-
-            // 2. Read targeted step data-asset value
+            
             const activeSection = timelineSections[activeIndex];
             if (activeSection) {
                 const targetAsset = activeSection.getAttribute('data-asset');
                 if (targetAsset) {
-                    // 3. Class switching on existing images only (No reload, no recreate)
                     mediaAssets.forEach(asset => {
                         if (asset.id === `img-${targetAsset}`) {
                             asset.classList.add('active');
@@ -68,17 +181,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
+    
     function initializeDesktopEngine() {
-        const timelineSections = document.querySelectorAll('.timeline-section');
+        activeEngine = 'desktop';
+        
         const timelineFill = document.getElementById('timeline-fill');
         const mediaContainer = document.getElementById('media-container');
 
         let activeAssetId = 'industrial-engines';
-        let idleTimeout = null;
         let currentActiveIndex = -1;
         let isHovering = false;
-        let hoverResetTimeout = null;
 
         function handleScrollUpdate() {
             if (isHovering) return;
@@ -125,40 +237,49 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        function switchActiveAsset(assetId) {
+            if (assetId === activeAssetId) return;
+
+            mediaAssets.forEach(asset => {
+                if (asset.id === `img-${assetId}`) {
+                    asset.classList.add('active');
+                } else {
+                    asset.classList.remove('active');
+                }
+            });
+            activeAssetId = assetId;
+        }
+
+        desktopScrollHandler = handleScrollUpdate;
+        desktopResizeHandler = handleScrollUpdate;
+        
+        window.addEventListener('scroll', desktopScrollHandler);
+        window.addEventListener('resize', desktopResizeHandler);
+        
+        handleScrollUpdate();
+
+        // Hover bindings
         timelineSections.forEach((section, idx) => {
-            section.addEventListener('mouseenter', () => {
+            const enterHandler = () => {
                 isHovering = true;
                 clearTimeout(hoverResetTimeout);
                 activateTimelineStep(idx);
                 hoverResetTimeout = setTimeout(() => {
                     isHovering = false;
                 }, 100);
-            });
-
-            section.addEventListener('mouseleave', () => {
+            };
+            
+            const leaveHandler = () => {
                 clearTimeout(hoverResetTimeout);
                 isHovering = false;
-            });
+            };
+            
+            section.addEventListener('mouseenter', enterHandler);
+            section.addEventListener('mouseleave', leaveHandler);
+            
+            desktopHoverHandlers.push({ element: section, type: 'mouseenter', handler: enterHandler });
+            desktopHoverHandlers.push({ element: section, type: 'mouseleave', handler: leaveHandler });
         });
-
-        function switchActiveAsset(assetId) {
-            if (assetId === activeAssetId) return;
-
-            const currentActive = document.querySelector('.media-asset.active');
-            if (currentActive) {
-                currentActive.classList.remove('active');
-            }
-
-            const nextActive = document.getElementById(`img-${assetId}`);
-            if (nextActive) {
-                nextActive.classList.add('active');
-                activeAssetId = assetId;
-            }
-        }
-
-        window.addEventListener('scroll', handleScrollUpdate);
-        window.addEventListener('resize', handleScrollUpdate);
-        handleScrollUpdate();
 
         // Dual-Mode Kinetic Physics Engine
         let targetX = 0;
@@ -174,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxSweepRotation = 6;
         const lerpFactor = 0.045;
 
-        window.addEventListener('mousemove', (e) => {
+        const mouseMoveHandler = (e) => {
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
             
@@ -188,12 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             clearTimeout(idleTimeout);
             idleTimeout = setTimeout(decayToIdle, 2000);
-        });
+        };
 
-        document.addEventListener('mouseleave', () => {
+        const mouseLeaveHandler = () => {
             clearTimeout(idleTimeout);
             decayToIdle();
-        });
+        };
 
         function decayToIdle() {
             targetX = 0;
@@ -202,7 +323,15 @@ document.addEventListener('DOMContentLoaded', () => {
             targetRotY = 0;
         }
 
+        desktopMouseMoveHandler = mouseMoveHandler;
+        desktopMouseLeaveHandler = mouseLeaveHandler;
+        
+        window.addEventListener('mousemove', desktopMouseMoveHandler);
+        document.addEventListener('mouseleave', desktopMouseLeaveHandler);
+
         function updatePhysics(time) {
+            if (activeEngine !== 'desktop') return;
+            
             currentX += (targetX - currentX) * lerpFactor;
             currentY += (targetY - currentY) * lerpFactor;
             currentRotX += (targetRotX - currentRotX) * lerpFactor;
@@ -218,10 +347,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const finalRotX = currentRotX + breatheRotX;
             const finalRotY = currentRotY + breatheRotY;
 
-            mediaContainer.style.transform = `translate3d(${finalX.toFixed(2)}px, ${finalY.toFixed(2)}px, 0) rotateX(${finalRotX.toFixed(2)}deg) rotateY(${finalRotY.toFixed(2)}deg)`;
-            requestAnimationFrame(updatePhysics);
+            if (mediaContainer) {
+                mediaContainer.style.transform = `translate3d(${finalX.toFixed(2)}px, ${finalY.toFixed(2)}px, 0) rotateX(${finalRotX.toFixed(2)}deg) rotateY(${finalRotY.toFixed(2)}deg)`;
+            }
+            
+            physicsRafId = requestAnimationFrame(updatePhysics);
         }
 
-        requestAnimationFrame(updatePhysics);
+        physicsRafId = requestAnimationFrame(updatePhysics);
     }
 });
