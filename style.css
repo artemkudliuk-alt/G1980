@@ -356,24 +356,63 @@ body::-webkit-scrollbar {
 /* ==========================================================================
    FOOTER SECTION
    ========================================================================== */
+/* ==========================================================================
+   PREMIUM ENTERPRISE FOOTER SIGNATURE
+   ========================================================================== */
 .panel-footer {
     display: flex;
     justify-content: flex-end; /* Shift footer text to the right grid margin */
     align-items: center;
     border-top: 1px solid var(--color-border);
-    padding-top: 1.5rem;
+    padding-right: 40px; /* Move contact block 40px inward */
     width: 100%;
-    margin-top: 2rem;
+    margin-top: 3.5rem;
     z-index: 100;
     background-color: var(--color-bg-light);
 }
 
-.construction-text {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--color-text-secondary); /* Logo Muted Gray (#8A9096) */
-    letter-spacing: 1.5px;
+.footer-contact-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    padding-top: 32px;
+    padding-bottom: 32px;
+    text-align: right;
+    
+    /* Unified typography signature block */
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    line-height: 1.6;
+    color: var(--color-text-secondary); /* Brand secondary gray (#8A9096) */
+}
+
+/* Base Clickable Contact Links Styles (Decoupled from default blue) */
+.footer-contact-link {
+    color: inherit;
+    text-decoration: none;
+    transition: all .25s ease;
+    cursor: pointer;
+    display: inline-block;
+    will-change: transform, color;
+    outline: none;
+}
+
+.footer-contact-link:visited {
+    color: inherit;
+}
+
+.footer-contact-link:hover {
+    color: #E30613; /* Vibrant Logo Red */
+    transform: translateY(-2px); /* Subtle luxury lift */
+}
+
+.footer-credit {
+    color: inherit;
+    user-select: none;
 }
 
 .brand-subtext {
@@ -385,103 +424,283 @@ body::-webkit-scrollbar {
 /* ==========================================================================
    RESPONSIVE OUTFLOW (MOBILE RESTRUCTURE)
    ========================================================================== */
-@media (max-width: 1023px) {
+/* ==========================================================================
+   REBUILT MOBILE TIMELINE ARCHITECTURE (MAX-WIDTH: 768px)
+   ========================================================================== */
+/* ==========================================================================
+   REBUILT MOBILE TIMELINE ARCHITECTURE (MAX-WIDTH: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* 1. Reset base elements for native scrolling flow */
     body {
-        overflow: auto;
-        height: auto;
-        width: 100vw;
+        overflow-x: hidden !important;
+        overflow-y: scroll !important;
+        height: auto !important;
+        width: 100vw !important;
+        background-color: #FFFFFF !important;
     }
     
     .timeline-stub-container {
-        flex-direction: column;
-        height: auto;
+        display: block !important;
+        height: auto !important;
+        position: relative !important;
+        background-color: #FFFFFF !important;
+        transform: none !important;
+        opacity: 1 !important;
     }
-    
-    /* Media Panel occupies the top aspect slider */
+
+    .scroll-track {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0 !important;
+        background-color: transparent !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    /* 2. SYSTEM A: FIXED VIEWPORT LAYER */
+    /* Lock Header strictly at the very top */
+    .panel-header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 60px !important;
+        background: #FFFFFF !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 0 20px !important;
+        margin: 0 !important;
+        border-bottom: 1px solid rgba(74, 80, 86, 0.08) !important;
+        transform: none !important;
+        backdrop-filter: none !important;
+        opacity: 1 !important;
+    }
+
+    .brand-logo {
+        max-height: 32px !important;
+        width: auto !important;
+    }
+
+    /* Lock the Image Viewer right below the header */
     .media-station {
-        width: 100%;
-        height: 45vh;
-        min-height: 300px;
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--color-border);
-        border-right: none;
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 28vh !important; /* Reduced image stage height */
+        background: #FFFFFF !important;
+        z-index: 1000 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(74, 80, 86, 0.08) !important;
+        transform: none !important;
+        opacity: 1 !important;
     }
-    
+
     .media-container {
-        width: 100%;
-        height: 100%;
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        transform: none !important;
+        opacity: 1 !important;
     }
     
     .media-asset {
-        transform: none !important; /* Disable active mouse parallax completely */
-        max-width: 80%;
-        max-height: 80%;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        max-height: 90% !important;
+        width: auto !important;
+        object-fit: contain !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.4s ease !important;
     }
-    
-    /* Right column drops underneath */
-    .scroll-track {
-        width: 100%;
-        height: auto;
-        padding: 3rem 2rem 2.5rem 2rem;
-    }
-    
-    .panel-header {
-        position: relative;
-        margin-bottom: 2rem;
-        background: none;
-        backdrop-filter: none;
-        padding-bottom: 0;
-    }
-    
-    .huge-back-letter {
-        display: none; /* Hide background letters on mobile to reduce visual noise */
-    }
-    
-    .timeline-wrapper {
-        padding-left: 2rem;
-    }
-    
-    .timeline-section {
-        margin-bottom: 3rem;
-        opacity: 0.5; /* Higher visibility scroll sequence for mobile */
-    }
-    
-    .timeline-section.active {
-        opacity: 1;
-    }
-    
-    .step-title {
-        font-size: 1.8rem;
-    }
-    
-    .panel-footer {
-        position: relative; /* Reset fixed viewport mapping */
-        bottom: auto;
-        right: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-        text-align: center;
-        align-items: center;
-        border-top: 1px solid var(--color-border);
-        padding-top: 1.5rem;
-        margin-top: 3.5rem;
-        width: 100%;
-        pointer-events: auto; /* Re-enable pointer events naturally */
-    }
-}
 
-@media (max-width: 480px) {
-    .media-station {
-        height: 40vh;
-        min-height: 240px;
+    .media-asset.active {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 5 !important;
     }
-    
-    .scroll-track {
-        padding: 2.5rem 1.25rem 2rem 1.25rem;
+
+    .media-overlay {
+        display: none !important;
     }
-    
+
+    /* 3. SYSTEM B: NATIVE SCROLL LAYER */
+    /* Mandatory offset to start below the fixed image area */
+    .timeline-wrapper {
+        margin-top: calc(28vh + 60px) !important; /* Spacing aligned with 28vh stage height */
+        padding-top: 30px !important; /* Safety padding-top to prevent clipping */
+        padding-left: 50px !important; /* Text protection offset from line */
+        padding-right: 20px !important;
+        padding-bottom: 40px !important;
+        position: relative !important;
+        display: block !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    /* Timeline Line placement */
+    .timeline-line {
+        position: absolute !important;
+        left: 20px !important;
+        width: 2px !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        background-color: var(--color-border) !important;
+        z-index: 10 !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    /* Mandatorily hide progress line fill */
+    .timeline-line-fill {
+        display: none !important;
+    }
+
+    /* Step Narrative normal document flow block styles */
+    .timeline-section {
+        min-height: 30vh !important; /* Reduced step height for compact story flow */
+        margin-bottom: 24px !important; /* Tight layout gaps */
+        display: block !important;
+        position: relative !important;
+        opacity: 1 !important; /* Force parent element opacity to 1 */
+        transform: none !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    .timeline-section:last-of-type {
+        margin-bottom: 0 !important;
+    }
+
+    /* 4. VISUAL STATES (INACTIVE VS ACTIVE) */
+    .timeline-section .section-content {
+        opacity: 1 !important; /* Ensure parent content wrapper has full opacity */
+        transform: none !important;
+        pointer-events: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Inactive step elements get 0.25 opacity */
+    .timeline-section:not(.is-active) .step-label,
+    .timeline-section:not(.is-active) .step-title,
+    .timeline-section:not(.is-active) .step-desc {
+        opacity: 0.25 !important;
+        transition: opacity 0.4s ease !important;
+    }
+
+    /* Active step elements get 1.0 opacity */
+    .timeline-section.is-active .step-label,
+    .timeline-section.is-active .step-title,
+    .timeline-section.is-active .step-desc {
+        opacity: 1 !important;
+        transition: opacity 0.4s ease !important;
+    }
+
+    /* Timeline bullet node coordinates */
+    .timeline-node {
+        width: 12px !important;
+        height: 12px !important;
+        min-height: 12px !important;
+        border-radius: 50% !important;
+        background-color: var(--color-text-secondary) !important; /* Neutral color */
+        opacity: 0.25 !important; /* Inactive bullet node opacity */
+        position: absolute !important;
+        left: -30px !important; /* Centered perfectly on the timeline line */
+        top: 6px !important;
+        transform: translateX(-50%) !important;
+        transition: background-color 0.4s ease, transform 0.4s ease, opacity 0.4s ease !important;
+        z-index: 11 !important;
+    }
+
+    /* Active Node Emphasis */
+    .timeline-section.is-active .timeline-node {
+        background-color: #E30613 !important; /* Vibrant Red */
+        transform: translateX(-50%) scale(1.2) !important;
+        opacity: 1 !important;
+    }
+
+    /* Mobile Typography Details */
+    .step-label {
+        font-size: 11px !important;
+        letter-spacing: 0.1em !important;
+        font-weight: 700 !important;
+        color: var(--color-text-secondary) !important;
+    }
+
     .step-title {
-        font-size: 1.5rem;
+        font-size: 22px !important;
+        line-height: 1.2 !important;
+        font-weight: 700 !important;
+        color: var(--color-text-primary) !important;
+    }
+
+    .step-desc {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+        color: var(--color-text-secondary) !important;
+    }
+
+    /* Hide background elements to reduce mobile noise */
+    .huge-back-letter {
+        display: none !important;
+    }
+
+    /* Tight Mobile Footer Stack with generous breathing room */
+    .panel-footer {
+        position: relative !important;
+        bottom: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding-top: 32px !important; /* Generous breathing top */
+        padding-bottom: 40px !important; /* Generous breathing bottom */
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+        margin-top: 40px !important;
+        border-top: 1px solid var(--color-border) !important;
+        background-color: #FFFFFF !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    .footer-contact-block {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        text-align: center !important;
+        padding-top: 24px !important;
+        padding-bottom: 32px !important;
+        width: 100% !important;
+    }
+
+    .footer-contact-link {
+        transition: all 0.2s ease !important;
+    }
+
+    /* Mobile Interaction (active/tap feedback) */
+    .footer-contact-link:active {
+        opacity: 0.7 !important;
+        transform: scale(0.98) !important;
     }
 }
